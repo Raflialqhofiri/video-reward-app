@@ -1,17 +1,36 @@
+import { useRef } from "react"
+
 export default function Home() {
+  const videos = [
+    "https://www.w3schools.com/html/mov_bbb.mp4",
+    "https://www.w3schools.com/html/movie.mp4"
+  ]
+
   return (
     <div style={{
       height: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      background: "#000",
-      color: "#fff",
-      fontFamily: "Arial"
+      overflowY: "scroll",
+      scrollSnapType: "y mandatory"
     }}>
-      <h1 style={{fontSize: "32px"}}>Video Reward Hub 🚀</h1>
-      <p>The future of interactive entertainment.</p>
+      {videos.map((src, index) => (
+        <div key={index} style={{
+          height: "100vh",
+          scrollSnapAlign: "start",
+          position: "relative"
+        }}>
+          <video
+            src={src}
+            controls
+            autoPlay
+            loop
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover"
+            }}
+          />
+        </div>
+      ))}
     </div>
   )
 }
