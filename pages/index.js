@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function Home() {
   const [coins, setCoins] = useState(0)
+  const rewardedRef = useRef({}) // supaya tiap video cuma bisa reward sekali
 
   const videos = [
     "https://www.w3schools.com/html/mov_bbb.mp4",
     "https://www.w3schools.com/html/movie.mp4"
   ]
 
-  // Load coin dari localStorage saat pertama buka
+  // Load coin
   useEffect(() => {
     const savedCoins = localStorage.getItem("coins")
     if (savedCoins) {
@@ -16,13 +17,17 @@ export default function Home() {
     }
   }, [])
 
-  // Simpan coin setiap berubah
+  // Save coin
   useEffect(() => {
     localStorage.setItem("coins", coins)
   }, [coins])
 
-  const claimReward = () => {
-    setCoins(coins + 10)
+  const handleTimeUpdate = (index, currentTime) => {
+    if (currentTime >= 10 && !rewardedRef.current[index]) {
+      setCoins(prev => prev + 10)
+      rewardedRef.current[index] = true
+      alert("🎉 You earned +10 coins!")
+    }
   }
 
   return (
@@ -33,7 +38,7 @@ export default function Home() {
       background: "#000",
       color: "#fff"
     }}>
-      
+
       {/* Coin Display */}
       <div style={{
         position: "fixed",
@@ -57,30 +62,15 @@ export default function Home() {
             autoPlay
             loop
             controls
+            onTimeUpdate={(e) =>
+              handleTimeUpdate(index, e.target.currentTime)
+            }
             style={{
               width: "100%",
               height: "100%",
               objectFit: "cover"
             }}
           />
-
-          <button
-            onClick={claimReward}
-            style={{
-              position: "absolute",
-              bottom: 40,
-              left: "50%",
-              transform: "translateX(-50%)",
-              padding: "12px 20px",
-              fontSize: "16px",
-              background: "gold",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: "bold"
-            }}
-          >
-            Claim +10 Coins
-          </button>
         </div>
       ))}
     </div>
