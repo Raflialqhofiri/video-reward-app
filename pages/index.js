@@ -3,29 +3,31 @@ import { useState, useEffect, useRef } from "react"
 export default function Home() {
   const [coins, setCoins] = useState(0)
   const [canClaimDaily, setCanClaimDaily] = useState(false)
+  const [liked, setLiked] = useState({})
   const rewardedRef = useRef({})
 
   const videos = [
-    "https://www.w3schools.com/html/mov_bbb.mp4",
-    "https://www.w3schools.com/html/movie.mp4"
+    {
+      url: "https://www.w3schools.com/html/mov_bbb.mp4",
+      username: "rewardhub",
+      caption: "Earn coins while watching 🔥"
+    },
+    {
+      url: "https://www.w3schools.com/html/movie.mp4",
+      username: "creator",
+      caption: "Daily rewards available 💎"
+    }
   ]
 
-  // Load coin
   useEffect(() => {
     const savedCoins = localStorage.getItem("coins")
-    if (savedCoins) {
-      setCoins(parseInt(savedCoins))
-    }
+    if (savedCoins) setCoins(parseInt(savedCoins))
 
     const lastClaim = localStorage.getItem("dailyClaim")
     const today = new Date().toDateString()
-
-    if (lastClaim !== today) {
-      setCanClaimDaily(true)
-    }
+    if (lastClaim !== today) setCanClaimDaily(true)
   }, [])
 
-  // Save coin
   useEffect(() => {
     localStorage.setItem("coins", coins)
   }, [coins])
@@ -46,6 +48,13 @@ export default function Home() {
     }
   }
 
+  const toggleLike = (index) => {
+    setLiked(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }))
+  }
+
   return (
     <div style={{
       height: "100vh",
@@ -58,16 +67,15 @@ export default function Home() {
       {/* Coin Display */}
       <div style={{
         position: "fixed",
-        top: 10,
+        top: 15,
         right: 20,
         zIndex: 1000,
-        fontSize: "18px",
         fontWeight: "bold"
       }}>
-        💰 {coins} Coins
+        💰 {coins}
       </div>
 
-      {/* Daily Reward Button */}
+      {/* Daily Reward */}
       {canClaimDaily && (
         <button
           onClick={claimDailyReward}
@@ -75,28 +83,28 @@ export default function Home() {
             position: "fixed",
             top: 50,
             right: 20,
-            padding: "8px 12px",
+            padding: "6px 10px",
             background: "orange",
             border: "none",
             borderRadius: "6px",
             fontWeight: "bold"
           }}
         >
-          Claim Daily +20
+          +20 Daily
         </button>
       )}
 
-      {videos.map((src, index) => (
+      {videos.map((video, index) => (
         <div key={index} style={{
           height: "100vh",
           scrollSnapAlign: "start",
           position: "relative"
         }}>
           <video
-            src={src}
+            src={video.url}
             autoPlay
             loop
-            controls
+            controls={false}
             onTimeUpdate={(e) =>
               handleTimeUpdate(index, e.target.currentTime)
             }
@@ -106,6 +114,34 @@ export default function Home() {
               objectFit: "cover"
             }}
           />
+
+          {/* Sidebar */}
+          <div style={{
+            position: "absolute",
+            right: 10,
+            bottom: 100,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 20,
+            fontSize: 24
+          }}>
+            <div onClick={() => toggleLike(index)} style={{cursor:"pointer"}}>
+              {liked[index] ? "❤️" : "🤍"}
+            </div>
+            <div>💬</div>
+            <div>🔗</div>
+          </div>
+
+          {/* Caption */}
+          <div style={{
+            position: "absolute",
+            bottom: 40,
+            left: 10
+          }}>
+            <div style={{fontWeight:"bold"}}>@{video.username}</div>
+            <div>{video.caption}</div>
+          </div>
         </div>
       ))}
     </div>
