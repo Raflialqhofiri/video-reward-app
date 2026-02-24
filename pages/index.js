@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react"
 
 export default function Home() {
   const [coins, setCoins] = useState(0)
-  const rewardedRef = useRef({}) // supaya tiap video cuma bisa reward sekali
+  const [canClaimDaily, setCanClaimDaily] = useState(false)
+  const rewardedRef = useRef({})
 
   const videos = [
     "https://www.w3schools.com/html/mov_bbb.mp4",
@@ -15,6 +16,13 @@ export default function Home() {
     if (savedCoins) {
       setCoins(parseInt(savedCoins))
     }
+
+    const lastClaim = localStorage.getItem("dailyClaim")
+    const today = new Date().toDateString()
+
+    if (lastClaim !== today) {
+      setCanClaimDaily(true)
+    }
   }, [])
 
   // Save coin
@@ -22,11 +30,19 @@ export default function Home() {
     localStorage.setItem("coins", coins)
   }, [coins])
 
+  const claimDailyReward = () => {
+    const today = new Date().toDateString()
+    localStorage.setItem("dailyClaim", today)
+    setCoins(prev => prev + 20)
+    setCanClaimDaily(false)
+    alert("🎉 Daily reward +20 coins!")
+  }
+
   const handleTimeUpdate = (index, currentTime) => {
     if (currentTime >= 10 && !rewardedRef.current[index]) {
       setCoins(prev => prev + 10)
       rewardedRef.current[index] = true
-      alert("🎉 You earned +10 coins!")
+      alert("🎬 +10 coins for watching!")
     }
   }
 
@@ -50,6 +66,25 @@ export default function Home() {
       }}>
         💰 {coins} Coins
       </div>
+
+      {/* Daily Reward Button */}
+      {canClaimDaily && (
+        <button
+          onClick={claimDailyReward}
+          style={{
+            position: "fixed",
+            top: 50,
+            right: 20,
+            padding: "8px 12px",
+            background: "orange",
+            border: "none",
+            borderRadius: "6px",
+            fontWeight: "bold"
+          }}
+        >
+          Claim Daily +20
+        </button>
+      )}
 
       {videos.map((src, index) => (
         <div key={index} style={{
