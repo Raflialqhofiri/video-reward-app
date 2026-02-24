@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function Home() {
   const [coins, setCoins] = useState(0)
@@ -7,6 +7,19 @@ export default function Home() {
     "https://www.w3schools.com/html/mov_bbb.mp4",
     "https://www.w3schools.com/html/movie.mp4"
   ]
+
+  // Load coin dari localStorage saat pertama buka
+  useEffect(() => {
+    const savedCoins = localStorage.getItem("coins")
+    if (savedCoins) {
+      setCoins(parseInt(savedCoins))
+    }
+  }, [])
+
+  // Simpan coin setiap berubah
+  useEffect(() => {
+    localStorage.setItem("coins", coins)
+  }, [coins])
 
   const claimReward = () => {
     setCoins(coins + 10)
