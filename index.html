@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reward Hub</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+
+<h2>Upload Post</h2>
+
+<input type="file" id="fileInput" />
+<br><br>
+<input type="text" id="captionInput" placeholder="Tulis caption..." />
+<br><br>
+<button onclick="handleUpload()">Upload</button>
+
+<hr>
+
+<h2>Feed</h2>
+<div id="feed"></div>
+
+<script>
+  const supabaseClient = supabase.createClient(
+    "https://cnchkkxgapgmmkwbqriz.supabase.co",
+    "sb_publishable_-d5p8uzCzYoTRl7GBAjblA_3yHY-3nQ"
+  );
+
+  async function handleUpload() {
+    const file = document.getElementById("fileInput").files[0];
+    const caption = document.getElementById("captionInput").value;
+
+    if (!file) {
+      alert("Pilih file dulu!");
+      return;
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = Date.now() + "." + fileExt;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from("media")
+      .upload(fileName, file);
+
+    if (uploadError) {
+      alert("Upload gagal!");
+      console.log(uploadError);
+      return;
+    }
+
+    const { data } = supabaseClient
+      .storage
+      .from("media")
+      .getPublicUrl(fileName);
+
+    const fileUrl = data.publicUrl;
+
+    const { error: insertError } = await supabaseClient
+      .from("posts")
+      .insert([
+        {
+          file_url: fileUrl,
+          file_type: file.type,
+          caption: caption
+        }
+      ]);
+
+    if (insertError) {
+      alert("Gagal simpan ke database!");
+      console.log(insertError);
+      return;
+    }
+
+    alert("Upload berhasil!");
+    loadPosts();
+  }
+
+  async function loadPosts() {
+    const { data, error } = await supabaseClient
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const feed = document.getElementById("feed");
+    feed.innerHTML = "";
+
+    data.forEach(post => {
+      if (post.file_type.startsWith("image")) {
+        feed.innerHTML += `
+          <div>
+            <img src="${post.file_url}" width="100%" />
+            <p>${post.caption}</p>
+          </div>
+          <hr>
+        `;
+      } else if (post.file_type.startsWith("video")) {
+        feed.innerHTML += `
+          <div>
+            <video src="${post.file_url}" controls width="100%"></video>
+            <p>${post.caption}</p>
+          </div>
+          <hr>
+        `;
+      }
+    });
+  }
+
+  loadPosts();
+</script>
+
+</body>
+</html>
