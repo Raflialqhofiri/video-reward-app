@@ -1,149 +1,65 @@
-import { useState, useEffect, useRef } from "react"
+"use client";
+import { useState } from "react";
 
 export default function Home() {
-  const [coins, setCoins] = useState(0)
-  const [canClaimDaily, setCanClaimDaily] = useState(false)
-  const [liked, setLiked] = useState({})
-  const rewardedRef = useRef({})
+  const [posts, setPosts] = useState([]);
 
-  const videos = [
-    {
-      url: "https://www.w3schools.com/html/mov_bbb.mp4",
-      username: "rewardhub",
-      caption: "Earn coins while watching 🔥"
-    },
-    {
-      url: "https://www.w3schools.com/html/movie.mp4",
-      username: "creator",
-      caption: "Daily rewards available 💎"
-    }
-  ]
+  const handleUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  useEffect(() => {
-    const savedCoins = localStorage.getItem("coins")
-    if (savedCoins) setCoins(parseInt(savedCoins))
+    const url = URL.createObjectURL(file);
 
-    const lastClaim = localStorage.getItem("dailyClaim")
-    const today = new Date().toDateString()
-    if (lastClaim !== today) setCanClaimDaily(true)
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem("coins", coins)
-  }, [coins])
-
-  const claimDailyReward = () => {
-    const today = new Date().toDateString()
-    localStorage.setItem("dailyClaim", today)
-    setCoins(prev => prev + 20)
-    setCanClaimDaily(false)
-    alert("🎉 Daily reward +20 coins!")
-  }
-
-  const handleTimeUpdate = (index, currentTime) => {
-    if (currentTime >= 10 && !rewardedRef.current[index]) {
-      setCoins(prev => prev + 10)
-      rewardedRef.current[index] = true
-      alert("🎬 +10 coins for watching!")
-    }
-  }
-
-  const toggleLike = (index) => {
-    setLiked(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }))
-  }
+    setPosts([
+      { id: Date.now(), type: file.type, url },
+      ...posts,
+    ]);
+  };
 
   return (
-    <div style={{
-      height: "100vh",
-      overflowY: "scroll",
-      scrollSnapType: "y mandatory",
-      background: "#000",
-      color: "#fff"
-    }}>
+    <div className="min-h-screen bg-black text-white">
 
-      {/* Coin Display */}
-      <div style={{
-        position: "fixed",
-        top: 15,
-        right: 20,
-        zIndex: 1000,
-        fontWeight: "bold"
-      }}>
-        💰 {coins}
+      {/* Header */}
+      <div className="p-4 text-center text-xl font-bold border-b border-gray-800">
+        RewardHub
       </div>
 
-      {/* Daily Reward */}
-      {canClaimDaily && (
-        <button
-          onClick={claimDailyReward}
-          style={{
-            position: "fixed",
-            top: 50,
-            right: 20,
-            padding: "6px 10px",
-            background: "orange",
-            border: "none",
-            borderRadius: "6px",
-            fontWeight: "bold"
-          }}
-        >
-          +20 Daily
-        </button>
-      )}
-
-      {videos.map((video, index) => (
-        <div key={index} style={{
-          height: "100vh",
-          scrollSnapAlign: "start",
-          position: "relative"
-        }}>
-          <video
-            src={video.url}
-            autoPlay
-            loop
-            controls={false}
-            onTimeUpdate={(e) =>
-              handleTimeUpdate(index, e.target.currentTime)
-            }
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover"
-            }}
+      {/* Upload Button */}
+      <div className="p-4">
+        <label className="bg-yellow-500 text-black px-4 py-2 rounded-lg cursor-pointer">
+          ➕ Upload Post
+          <input
+            type="file"
+            accept="image/*,video/*"
+            hidden
+            onChange={handleUpload}
           />
+        </label>
+      </div>
 
-          {/* Sidebar */}
-          <div style={{
-            position: "absolute",
-            right: 10,
-            bottom: 100,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 20,
-            fontSize: 24
-          }}>
-            <div onClick={() => toggleLike(index)} style={{cursor:"pointer"}}>
-              {liked[index] ? "❤️" : "🤍"}
-            </div>
-            <div>💬</div>
-            <div>🔗</div>
-          </div>
+      {/* Feed */}
+      <div className="flex flex-col gap-6 p-4">
+        {posts.length === 0 && (
+          <p className="text-gray-400 text-center mt-10">
+            No posts yet. Be the first to upload 🚀
+          </p>
+        )}
 
-          {/* Caption */}
-          <div style={{
-            position: "absolute",
-            bottom: 40,
-            left: 10
-          }}>
-            <div style={{fontWeight:"bold"}}>@{video.username}</div>
-            <div>{video.caption}</div>
+        {posts.map((post) => (
+          <div key={post.id} className="bg-gray-900 rounded-xl overflow-hidden">
+            {post.type.startsWith("image") ? (
+              <img src={post.url} className="w-full" />
+            ) : (
+              <video
+                src={post.url}
+                controls
+                className="w-full"
+              />
+            )}
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+
     </div>
-  )
+  );
 }
