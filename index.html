@@ -1,23 +1,111 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Reward Hub</title>
+  <title>RewardHub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0f0f0f;
+      color: white;
+    }
+
+    header {
+      padding: 20px;
+      font-size: 22px;
+      font-weight: 600;
+      text-align: center;
+      border-bottom: 1px solid #222;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    .upload-box {
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+    }
+
+    input {
+      background: #2a2a2a;
+      color: white;
+    }
+
+    button {
+      background: linear-gradient(45deg, #00ff88, #00ccff);
+      color: black;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.8;
+    }
+
+    .post {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .post img, .post video {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .caption {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .empty {
+      text-align: center;
+      opacity: 0.5;
+      margin-top: 40px;
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>Upload Post</h2>
+<header>🚀 RewardHub</header>
 
-<input type="file" id="fileInput" />
-<br><br>
-<input type="text" id="captionInput" placeholder="Tulis caption..." />
-<br><br>
-<button onclick="handleUpload()">Upload</button>
+<div class="container">
 
-<hr>
+  <div class="upload-box">
+    <h3>Upload Post</h3>
+    <input type="file" id="fileInput">
+    <input type="text" id="captionInput" placeholder="Tulis caption...">
+    <button onclick="handleUpload()">Upload</button>
+  </div>
 
-<h2>Feed</h2>
-<div id="feed"></div>
+  <div id="feed"></div>
+
+</div>
 
 <script>
   const supabaseClient = supabase.createClient(
@@ -44,7 +132,6 @@
 
     if (uploadError) {
       alert("Upload gagal!");
-      console.log(uploadError);
       return;
     }
 
@@ -55,7 +142,7 @@
 
     const fileUrl = data.publicUrl;
 
-    const { error: insertError } = await supabaseClient
+    await supabaseClient
       .from("posts")
       .insert([
         {
@@ -65,18 +152,14 @@
         }
       ]);
 
-    if (insertError) {
-      alert("Gagal simpan ke database!");
-      console.log(insertError);
-      return;
-    }
+    document.getElementById("fileInput").value = "";
+    document.getElementById("captionInput").value = "";
 
-    alert("Upload berhasil!");
     loadPosts();
   }
 
   async function loadPosts() {
-    const { data, error } = await supabaseClient
+    const { data } = await supabaseClient
       .from("posts")
       .select("*")
       .order("created_at", { ascending: false });
@@ -84,24 +167,24 @@
     const feed = document.getElementById("feed");
     feed.innerHTML = "";
 
+    if (!data || data.length === 0) {
+      feed.innerHTML = `<div class="empty">No posts yet. Be the first 🚀</div>`;
+      return;
+    }
+
     data.forEach(post => {
+      const div = document.createElement("div");
+      div.className = "post";
+
       if (post.file_type.startsWith("image")) {
-        feed.innerHTML += `
-          <div>
-            <img src="${post.file_url}" width="100%" />
-            <p>${post.caption}</p>
-          </div>
-          <hr>
-        `;
-      } else if (post.file_type.startsWith("video")) {
-        feed.innerHTML += `
-          <div>
-            <video src="${post.file_url}" controls width="100%"></video>
-            <p>${post.caption}</p>
-          </div>
-          <hr>
-        `;
+        div.innerHTML += `<img src="${post.file_url}">`;
+      } else {
+        div.innerHTML += `<video src="${post.file_url}" controls></video>`;
       }
+
+      div.innerHTML += `<div class="caption">${post.caption || ""}</div>`;
+
+      feed.appendChild(div);
     });
   }
 
